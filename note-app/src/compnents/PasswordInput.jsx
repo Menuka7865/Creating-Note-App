@@ -6,7 +6,7 @@ const PasswordInput = ({ value, onChange, placeholder }) => {
     const [isShowPassword,setIsShowPassword] =useState(false);
 
     const toggleShowPassword = () => {
-        setIsShowPassword(!isShowPassword);
+        setIsShowPassword(prev => !prev);
     };
   return (
     <>

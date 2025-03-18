@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import PasswordInput from '../compnents/PasswordInput';
+import { validateEmail } from '../utilis/helper';
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -11,6 +12,23 @@ const Signup = () => {
 
   const handleSignup = async (e) => {
     e.preventDefault();
+    
+    setError("");
+    setPasswordError("");
+
+    if (!name){
+      setError("Please enter your name.");
+      return;
+    }
+    if (!validateEmail(email)){
+      setError("Please enter a valid email address.");
+      return;
+    }
+    if (!password){
+      setPasswordError("Please enter the password");
+      return;
+    }
+    
     console.log("Signing up with:", name, email, password);
   };
 
@@ -41,7 +59,7 @@ const Signup = () => {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
             />
-
+             {error && <p className='text-red-500 text-xs pb-1'>{error}</p>}
             {passwordError && <p className='text-red-500 text-xs pb-1'>{passwordError}</p>}
 
             <button type='submit' className='btn-primary'>Create Account</button>

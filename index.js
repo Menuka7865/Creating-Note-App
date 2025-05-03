@@ -1,10 +1,13 @@
 require("dotenv").config();
-const mongoose = require("mongoose");
 const express = require("express");
+const mongoose = require("mongoose");
 const cors = require("cors");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+
 const User = require("./models/user_model");
+const Note = require("./models/note_model");
+const authenticateToken = require("./middlewares/authenticateToken");
 
 const app = express();
 
@@ -23,7 +26,7 @@ app.get("/", (req, res) => {
   res.json({ data: "Hello" });
 });
 
-// Sign Up Route
+// Sign Up
 app.post("/create-account", async (req, res) => {
   const { fullName, email, password } = req.body;
 
@@ -39,7 +42,6 @@ app.post("/create-account", async (req, res) => {
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new User({ fullname: fullName, email, password: hashedPassword });
-
     await newUser.save();
 
     const token = jwt.sign({ id: newUser._id }, process.env.ACCESS_TOKEN_SECRET);
@@ -55,7 +57,7 @@ app.post("/create-account", async (req, res) => {
   }
 });
 
-// Sign In Route
+// Sign In
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
@@ -85,8 +87,41 @@ app.post("/login", async (req, res) => {
   });
 });
 
-// Start server
-const PORT = 8000;
+// Add Note
+app.post("/add-note", authenticateToken, async (req, res) => {
+  const { title, content, tags } = req.body;
+  const userId = req.user.id;
+
+  if (!title || !content) {
+    return res.status(400).json({ error: true, message: "Title and Content are required" });
+  }
+
+  try {
+    const note = new Note({
+      title,
+      content,
+      tags: tags || [],
+      userId,
+    });
+
+    await note.save();
+
+    return res.json({
+      error: false,
+      note,
+      message: "Note added successfully",
+    });
+  } catch (error) {
+    console.error(error);
+    return res.status(500).json({
+      error: true,
+      message: "Internal Server Error",
+    });
+  }
+});
+
+// Server
+const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);
 });

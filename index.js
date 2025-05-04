@@ -119,6 +119,64 @@ app.post("/add-note", authenticateToken, async (req, res) => {
     });
   }
 });
+//edit note
+app.put("/edit-note/:noteId", authenticateToken, async (req, res) => {
+  const noteId = req.params.noteId;
+  const { title, content, tags, isPinned } = req.body;
+  const userId = req.user.id;
+
+  if (!title && !content && !tags && typeof isPinned !== "boolean") {
+    return res.status(400).json({ error: true, message: "No changes provided" });
+  }
+
+  try {
+    const note = await Note.findOne({ _id: noteId, userId });
+
+    if (!note) {
+      return res.status(400).json({ error: true, message: "Note not found" });
+    }
+
+    if (title) note.title = title;
+    if (content) note.content = content;
+    if (tags) note.tags = tags;
+    if (typeof isPinned === "boolean") note.isPinned = isPinned;
+
+    await note.save();
+
+    return res.json({
+      error: false,
+      note,
+      message: "Note updated successfully",
+    });
+  } catch (error) {
+    console.error("Error editing note:", error);
+    return res.status(500).json({ error: true, message: "Internal server error" });
+  }
+});
+//get all notes
+app.get("/get-all-notes/", authenticateToken, async (req, res) => {
+  const userId = req.user.id;
+
+  try {
+    const notes = await Note.find({ userId }).sort({ isPinned: -1 });
+
+    return res.json({
+      error: false,
+      notes,
+      message: "All notes retrieved successfully",
+    });
+  } catch (error) {
+    console.error("Error retrieving notes:", error);
+    return res.status(500).json({
+      error: true,
+      message: "Internal server error",
+    });
+  }
+});
+
+
+ 
+
 
 // Server
 const PORT = process.env.PORT || 8000;

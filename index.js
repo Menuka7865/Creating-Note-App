@@ -89,7 +89,27 @@ app.post("/login", async (req, res) => {
     accessToken,
   });
 });
+//get-user
+app.get("/get-user", authenticateToken, async (req, res) => {
+  try {
+    const user = req.user;
+    console.log("Decoded user:", user); // Debug
 
+    const isUser = await User.findOne({ _id: user._id });
+
+    if (!isUser) {
+      return res.sendStatus(401);
+    }
+
+    return res.json({
+      user: isUser,
+      message: ""
+    });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ message: "Server error" });
+  }
+});
 // Add Note
 app.post("/add-note", authenticateToken, async (req, res) => {
   const { title, content, tags } = req.body;

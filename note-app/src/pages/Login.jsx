@@ -1,3 +1,4 @@
+// Login.jsx
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import PasswordInput from '../compnents/PasswordInput';
@@ -10,15 +11,11 @@ function Login() {
   const [emailError, setEmailError] = useState("");
   const [passwordError, setPasswordError] = useState("");
   const [serverError, setServerError] = useState("");
-
-  const navigate = useNavigate(); // ✅ Get the navigate function
+  const navigate = useNavigate(); // ✅ Correct usage
 
   const handleLogin = async (e) => {
     e.preventDefault();
-
-    setEmailError("");
-    setPasswordError("");
-    setServerError("");
+    setEmailError(""); setPasswordError(""); setServerError("");
 
     let hasError = false;
 
@@ -35,16 +32,10 @@ function Login() {
     if (hasError) return;
 
     try {
-      const response = await axiosInstance.post("/login", {
-        email,
-        password,
-      });
-
-      if (response.data && response.data.accessToken) {
+      const response = await axiosInstance.post("/login", { email, password });
+      if (response.data?.accessToken) {
         localStorage.setItem("token", response.data.accessToken);
-
-        // ✅ Use navigate here
-        navigate("/");
+        navigate("/"); // ✅ Redirect after login
       }
     } catch (error) {
       const message = error.response?.data?.message || "Login failed";
@@ -75,7 +66,6 @@ function Login() {
           {serverError && <p className='text-red-500 text-xs pb-1'>{serverError}</p>}
 
           <button type='submit' className='btn-primary'>Login</button>
-
           <p className='text-sm text-center mt-4'>
             Not registered yet?{" "}
             <Link to='/signup' className='font-medium text-primary underline'>Create an Account</Link>

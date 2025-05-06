@@ -1,34 +1,35 @@
-import React, { useEffect, useState } from 'react'
-import Navbar from '../compnents/Navbar'
-import NoteCard from '../compnents/NoteCard'
-import { MdAdd } from 'react-icons/md'
-import AddEditNotes from './AddEditNotes'
-import Modal from 'react-modal'
-import { useNavigate } from 'react-router-dom'
-import axiosInstance from '../utilis/axiosinstance'
+import React, { useEffect, useState } from 'react';
+import Navbar from '../compnents/Navbar';
+import NoteCard from '../compnents/NoteCard';
+import { MdAdd } from 'react-icons/md';
+import AddEditNotes from './AddEditNotes';
+import Modal from 'react-modal';
+import { useNavigate } from 'react-router-dom';
+import axiosInstance from '../utilis/axiosinstance';
 
 function Home() {
   const [notes, setNotes] = useState([]);
   const [openAddEditModal, setOpenAddEditModal] = useState({
     isShown: false,
-    type: "add",
+    type: 'add',
     data: null,
   });
   const [userInfo, setUserInfo] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isSearch, setIsSearch] = useState(false);
   const navigate = useNavigate();
 
   // Get user info
   const getUserInfo = async () => {
     try {
-      const response = await axiosInstance.get("/get-user");
+      const response = await axiosInstance.get('/get-user');
       if (response.data && response.data.user) {
         setUserInfo(response.data.user);
       }
     } catch (error) {
       if (error.response?.status === 401) {
         localStorage.clear();
-        navigate("/login");
+        navigate('/login');
       }
     }
   };
@@ -37,12 +38,12 @@ function Home() {
   const getAllNotes = async () => {
     setIsLoading(true);
     try {
-      const response = await axiosInstance.get("/get-all-notes");
+      const response = await axiosInstance.get('/get-all-notes');
       if (response.data?.error === false && response.data?.notes) {
         setNotes(response.data.notes);
       }
     } catch (error) {
-      console.error("Error fetching notes:", error);
+      console.error('Error fetching notes:', error);
     } finally {
       setIsLoading(false);
     }
@@ -51,13 +52,13 @@ function Home() {
   // Add new note
   const addNote = async (noteData) => {
     try {
-      const response = await axiosInstance.post("/add-note", noteData);
+      const response = await axiosInstance.post('/add-note', noteData);
       if (response.data?.error === false) {
         getAllNotes(); // Refresh notes list
       }
       return response.data;
     } catch (error) {
-      console.error("Error adding note:", error);
+      console.error('Error adding note:', error);
       throw error;
     }
   };
@@ -71,7 +72,7 @@ function Home() {
       }
       return response.data;
     } catch (error) {
-      console.error("Error editing note:", error);
+      console.error('Error editing note:', error);
       throw error;
     }
   };
@@ -85,7 +86,7 @@ function Home() {
       }
       return response.data;
     } catch (error) {
-      console.error("Error deleting note:", error);
+      console.error('Error deleting note:', error);
       throw error;
     }
   };
@@ -94,17 +95,18 @@ function Home() {
   const togglePinNote = async (noteId, isPinned) => {
     try {
       const response = await axiosInstance.put(`/update-note-pinned/${noteId}`, {
-        isPinned: !isPinned
+        isPinned: !isPinned,
       });
       if (response.data?.error === false) {
         getAllNotes(); // Refresh notes list
       }
       return response.data;
     } catch (error) {
-      console.error("Error pinning note:", error);
+      console.error('Error pinning note:', error);
       throw error;
     }
   };
+  
 
   useEffect(() => {
     getUserInfo();
@@ -114,11 +116,15 @@ function Home() {
   return (
     <>
       <Navbar userInfo={userInfo} />
-      <div className='container mx-auto'>
+      <div className="container mx-auto">
         {isLoading ? (
-          <div className='flex justify-center mt-8'>Loading notes...</div>
+          <div className="flex justify-center mt-8">Loading notes...</div>
+        ) : notes.length === 0 ? (
+          <div className="flex justify-center mt-8 text-gray-500 text-lg">
+            No notes found.
+          </div>
         ) : (
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8'>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-8">
             {notes.map((note) => (
               <NoteCard
                 key={note._id}
@@ -130,7 +136,7 @@ function Home() {
                 onEdit={() => {
                   setOpenAddEditModal({
                     isShown: true,
-                    type: "edit",
+                    type: 'edit',
                     data: note,
                   });
                 }}
@@ -141,39 +147,37 @@ function Home() {
           </div>
         )}
       </div>
+
+      {/* Add Note Button */}
       <button
-        className='w-16 h-16 flex items-center justify-center rounded-2xl bg-primary hover:bg-blue-600 absolute right-10 bottom-10'
+        className="w-16 h-16 flex items-center justify-center rounded-2xl bg-primary hover:bg-blue-600 absolute right-10 bottom-10"
         onClick={() => {
-          setOpenAddEditModal({ isShown: true, type: "add", data: null });
+          setOpenAddEditModal({ isShown: true, type: 'add', data: null });
         }}
       >
-        <MdAdd className='text-[32px] text-white' />
+        <MdAdd className="text-[32px] text-white" />
       </button>
+
+      {/* Modal */}
       <Modal
         isOpen={openAddEditModal.isShown}
         onRequestClose={() => {
-          setOpenAddEditModal({ isShown: false, type: "add", data: null });
+          setOpenAddEditModal({ isShown: false, type: 'add', data: null });
         }}
         style={{
           overlay: {
-            backgroundColor: "rgba(0,0,0,0.2)",
+            backgroundColor: 'rgba(0,0,0,0.2)',
           },
         }}
         contentLabel=""
-        className="w-[40%] max-h-3/4 bg-white rounded-md mx-auto mt-14 p-5 overflow-scroll"
+        className="w-[90%] md:w-[60%] lg:w-[40%] max-h-[80vh] bg-white rounded-md mx-auto mt-14 p-5 overflow-y-auto"
       >
         <AddEditNotes
           type={openAddEditModal.type}
           noteData={openAddEditModal.data}
           onClose={() => {
-            setOpenAddEditModal({ isShown: false, type: "add", data: null });
-          }}
-          onSave={(noteData) => {
-            if (openAddEditModal.type === "add") {
-              addNote(noteData);
-            } else {
-              editNote(openAddEditModal.data._id, noteData);
-            }
+            setOpenAddEditModal({ isShown: false, type: 'add', data: null });
+            getAllNotes(); // Ensure refresh after modal closes
           }}
         />
       </Modal>
